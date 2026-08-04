@@ -1,2 +1,4 @@
-﻿// See https://aka.ms/new-console-template for more information
-Console.WriteLine("Hello, World!");
+﻿var file = new FileInfo("./TestFiles/add/Add.asm");
+Console.WriteLine(file.FullName);
+var lines = File.ReadAllText(file.FullName);
+Console.WriteLine(lines);
