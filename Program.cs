@@ -2,6 +2,9 @@
 
 const bool DEBUG = true;
 
+int i_line = 0;
+int col = 0;
+
 if (args.Length <= 0)
 {
   Print("No file path was provided");
@@ -35,7 +38,10 @@ void interpret(FileInfo file) {
       NewLine();
     }
   }
+}
 
+void get_token(string something)
+{
 }
 
 void interpret_a_instruction(string line)
@@ -55,8 +61,15 @@ void debug_line(string line)
 void interpret_c_instruction(string line)
 {
   int c_initial = 0b1110_0000_0000_0000;
-  string dest = line[0].ToString();
-  string comp = line[2].ToString();
+  for (col; col < line.Length; col++)
+  {
+    if (!Char.IsLetter(line[col+1]))
+    {
+      get_token(line.Substring(col));
+    }
+  }
+  // string dest = line[0].ToString();
+  // string comp = line[2].ToString();
 
   int b_dest = 0b0;
 
