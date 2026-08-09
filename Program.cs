@@ -2,19 +2,19 @@
 
 const bool DEBUG = true;
 
-var file = new FileInfo("./TestFiles/add/Add.asm");
-var file2 = new FileInfo("./TestFiles/max/Max.asm");
-var file3 = new FileInfo("./TestFiles/pong/Pong.asm");
-var file4 = new FileInfo("./TestFiles/pong/PongL.asm");
-var file5 = new FileInfo("./TestFiles/rect/Rect.asm");
-var file6 = new FileInfo("./TestFiles/rect/RectL.asm");
+if (args.Length <= 0)
+{
+  Print("No file path was provided");
+  return;
+}
+var file = new FileInfo(args[0]);
+if (!file.Exists)
+{
+  Print($"The file {file.FullName} doesn't exist");
+  return;
+}
 
 interpret(file);
-interpret(file2);
-interpret(file3);
-interpret(file4);
-interpret(file5);
-interpret(file6);
 
 void interpret(FileInfo file) {
   using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
