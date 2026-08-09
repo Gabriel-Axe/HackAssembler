@@ -2,24 +2,36 @@
 
 const bool DEBUG = true;
 
-string readContents;
 var file = new FileInfo("./TestFiles/add/Add.asm");
+var file2 = new FileInfo("./TestFiles/max/Max.asm");
+var file3 = new FileInfo("./TestFiles/pong/Pong.asm");
+var file4 = new FileInfo("./TestFiles/pong/PongL.asm");
+var file5 = new FileInfo("./TestFiles/rect/Rect.asm");
+var file6 = new FileInfo("./TestFiles/rect/RectL.asm");
 
+interpret(file);
+interpret(file2);
+interpret(file3);
+interpret(file4);
+interpret(file5);
+interpret(file6);
 
-void interpret(string line) {
+void interpret(FileInfo file) {
   using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
   {
+    Print($"Interpreting {file.FullName}\n");
     while (!streamReader.EndOfStream) 
     {
       var line = streamReader.ReadLine();
-      if (!line.Any() || line.StartsWith("//")) return;
+      // Print($"line: {line}");
+      if (!line.Any() || line.StartsWith("//")) continue;
       if (line.StartsWith("@")) {
         interpret_a_instruction(line);
       }
       else {
         interpret_c_instruction(line);
       }
-      d_line(line);
+      debug_line(line);
       NewLine();
     }
   }
@@ -96,3 +108,4 @@ void NewLine()
 //   Console.WriteLine($"{line} \n");
 // }
 // Console.WriteLine(readContents);
+
