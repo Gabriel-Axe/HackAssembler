@@ -5,27 +5,80 @@ const bool DEBUG = true;
 string readContents;
 var file = new FileInfo("./TestFiles/add/Add.asm");
 
-using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
-{
-  while (!streamReader.EndOfStream) 
-  {
-    var line = streamReader.ReadLine();
-    interpret(line);
-  }
-}
 
 void interpret(string line) {
-  if (!line.Any() || line.StartsWith("//")) return;
-  if (line.StartsWith("@"))
+  using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
   {
-    int address = Int32.Parse(line.Substring(1));
-    Print(Convert.ToString(address, 2).PadLeft(16, '0'));
+    while (!streamReader.EndOfStream) 
+    {
+      var line = streamReader.ReadLine();
+      if (!line.Any() || line.StartsWith("//")) return;
+      if (line.StartsWith("@")) {
+        interpret_a_instruction(line);
+      }
+      else {
+        interpret_c_instruction(line);
+      }
+      d_line(line);
+      NewLine();
+    }
   }
+
+}
+
+void interpret_a_instruction(string line)
+{
+  int address = Int32.Parse(line.Substring(1));
+  Print(Convert.ToString(address, 2).PadLeft(16, '0'));
+}
+
+void debug_line(string line)
+{
   if (DEBUG)
   {
     Print($": {line}");
   }
-  NewLine();
+}
+
+void interpret_c_instruction(string line)
+{
+  int c_initial = 0b1110_0000_0000_0000;
+  string dest = line[0].ToString();
+  string comp = line[2].ToString();
+
+  int b_dest = 0b0;
+
+  switch (dest) {
+    case "D":
+      b_dest = 0b010;
+      break;
+    
+    case "A":
+      b_dest = 0b100;
+      break;
+
+    case "M":
+      b_dest = 0b001;
+      break;
+  }
+
+  var final = c_initial | b_dest;
+  Console.WriteLine(Convert.ToString(final, 2).PadLeft(16, '0'));
+
+  // int b_comp;
+  // switch (comp) {
+  //   case "D":
+  //     b_dest = 0b010;
+  //     break;
+  //
+  //   case "A":
+  //     b_dest = 0b100;
+  //     break;
+  //
+  //   case "M":
+  //     b_dest = 0b001;
+  //     break;
+  // }
 }
 
 void Print(object? value)
