@@ -8,6 +8,9 @@ public class Assembler
   private Int16 CurOutput { get; set; } = 0;
   private List<Int16> Outputs  { get; set; } = new();
 
+  private JumpType _JumpType { get; set; } = null;
+  private RegisterType Register { get; set; } = null;
+
   private FileInfo currentFile { get; set; } = null;
   private int Line { get; set; } = 0;
   private int Col { get; set; } = 0;
@@ -26,6 +29,10 @@ public class Assembler
   {
     currentFile = ReadFile(path);
     Interpret(currentFile);
+    foreach (var output in Outputs)
+    {
+      Console.WriteLine(output);
+    }
   }
 
   /// <summary>
@@ -112,5 +119,22 @@ public class Assembler
   {
     C_INSTRUCTION,
     A_INSTRUCTION,
+  }
+
+  private enum JumpType
+  {
+    JGT,
+    JEQ,
+    JGE,
+    JLT,
+    JLE,
+    JMP
+  }
+
+  private enum RegisterType
+  {
+    D,
+    A,
+    M,
   }
 }
