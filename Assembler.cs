@@ -1,4 +1,5 @@
 using System.Text;
+using System.Text.Unicode;
 
 public class Assembler
 {
@@ -26,6 +27,17 @@ public class Assembler
     }
   }
 
+  private void OutputFile(string path)
+  {
+    using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(path)))
+    {
+      foreach (var instruction in Outputs)
+      {
+        writer.Write(instruction);
+      }
+    }
+  }
+
   public void Execute(string path)
   {
     ReadFile(path);
@@ -34,6 +46,7 @@ public class Assembler
     {
       Console.WriteLine(output);
     }
+    OutputFile("./Output.asm");
   }
 
   /// <summary>
@@ -132,8 +145,8 @@ public class Assembler
         c_initial = c_initial | 8;
         break;
     }
-    CurOutput = c_initial;
-    Outputs.Add(c_initial);
+    CurOutput = (short) c_initial;
+    Outputs.Add((short) c_initial);
   }
 
   void ReadAInstruction(string line)
