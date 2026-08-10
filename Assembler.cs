@@ -8,8 +8,9 @@ public class Assembler
   private Int16 CurOutput { get; set; } = 0;
   private List<Int16> Outputs  { get; set; } = new();
 
-  private JumpType _JumpType { get; set; } = null;
-  private RegisterType Register { get; set; } = null;
+  private bool InMemory {get; set;} = false;
+  private JumpType? _JumpType { get; set; } = null;
+  private RegisterType? _RegisterType { get; set; } = null;
 
   private FileInfo currentFile { get; set; } = null;
   private int Line { get; set; } = 0;
@@ -27,8 +28,8 @@ public class Assembler
 
   public void Execute(string path)
   {
-    currentFile = ReadFile(path);
-    Interpret(currentFile);
+    ReadFile(path);
+    Parse(currentFile);
     foreach (var output in Outputs)
     {
       Console.WriteLine(output);
@@ -38,24 +39,17 @@ public class Assembler
   /// <summary>
   /// Reads the specified file and changes the internal Assembler state
   /// </summary>
-  private void Interpret(FileInfo file) {
+  private void Parse(FileInfo file) {
     using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
     {
       DebugPrinter.Print($"Interpreting {currentFile.FullName}\n");
       while (!streamReader.EndOfStream) 
       {
         var line = streamReader.ReadLine();
-        // DebugPrinter.Print($"line: {line}");
         if (!line.Any() || line.StartsWith("//")) continue;
-        if (line.StartsWith("@")) {
-          ReadAInstruction(line);
-        }
-        else {
-          ReadCInstruction(line);
-        }
-        DebugPrinter.DebugPrintLine(line);
-        DebugPrinter.NewLine();
-        this.interpret(currentFile);
+
+        if (line.StartsWith("@")) ReadAInstruction(line);
+        else ReadCInstruction(line);
       }
     }
   }
@@ -63,15 +57,29 @@ public class Assembler
   void ReadCInstruction(string line)
   {
     int c_initial = 0b1110_0000_0000_0000;
-    for (int col = Col; col < line.Length; col++)
+    var token_builder = new StringBuilder();
+
+    char[] chars = line.ToCharArray();
+    var stopping_lexemes = new List<char>{'=', ';'};
+    for (int i = 0; i < chars.Length; i++)
     {
-      if (!Char.IsLetter(line[Col+1]))
+      var lexeme = chars[i];
+      if (!stopping_lexemes.Contains(lexeme))
       {
-        // get_token(line.Substring(Col));
+        token_builder.Append(lexeme);
+      }
+      else
+      {
+        switch (lexeme) {
+          case '=':
+            var next_lexeme = chars[i+1];
+            break;
+          case ';':
+            break;
+        }
       }
     }
     string dest = line[0].ToString();
-    // string comp = line[2].ToString();
 
     int b_dest = 0b0;
 
@@ -106,6 +114,26 @@ public class Assembler
     //     b_dest = 0b001;
     //     break;
     // }
+  }
+
+  void BuildCInstruction()
+  {
+    int c_initial = 0b1110_0000_0000_0000;
+    if (InMemory) c_initial = c_initial | 4096;
+    switch (_RegisterType)
+    {
+      case RegisterType.D:
+        c_initial = c_initial | 16;
+        break;
+      case RegisterType.A:
+        c_initial = c_initial | 32;
+        break;
+      case RegisterType.M:
+        c_initial = c_initial | 8;
+        break;
+    }
+    CurOutput = c_initial;
+    Outputs.Add(c_initial);
   }
 
   void ReadAInstruction(string line)
