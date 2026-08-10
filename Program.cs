@@ -40,7 +40,27 @@ void interpret(FileInfo file) {
   }
 }
 
-void get_token(string something)
+enum Type
+{
+  EQUAL,
+  SYMBOL,
+  VALUE
+}
+
+Tuple(string, Type) Parse(string line)
+{
+  var alist = new List<Tuple<string, Type>>();
+  var text = line.Split('');
+  foreach (var idk in text)
+  {
+    var val = ToSymbolAndType(idk);
+    alist.Add(val);
+  }
+
+  return val;
+}
+
+Tuple<string, Type> ToSymbolAndType(string text) 
 {
 }
 
