@@ -2,27 +2,36 @@ using System.Text;
 
 public class Assembler
 {
-
   private InstructionType readingInstruction { get; set; } = 0;
-  private Int16 address { get; set; } = 0;
+
+  private Int16 CurAddress { get; set; } = 0;
+  private Int16 CurOutput { get; set; } = 0;
+  private List<Int16> Outputs  { get; set; } = new();
+
   private FileInfo currentFile { get; set; } = null;
   private int Line { get; set; } = 0;
   private int Col { get; set; } = 0;
 
-  public void ReadFile(string path)
+  private void ReadFile(string path)
   {
     this.currentFile = new FileInfo(path);
     if (!currentFile.Exists)
     {
       DebugPrinter.Print($"The file {currentFile.FullName} doesn't exist");
-      return;
+      Environment.Exit(1);
     }
+  }
+
+  public void Execute(string path)
+  {
+    currentFile = ReadFile(path);
+    Interpret(currentFile);
   }
 
   /// <summary>
   /// Reads the specified file and changes the internal Assembler state
   /// </summary>
-  void interpret(FileInfo file) {
+  private void Interpret(FileInfo file) {
     using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
     {
       DebugPrinter.Print($"Interpreting {currentFile.FullName}\n");
@@ -94,8 +103,9 @@ public class Assembler
 
   void ReadAInstruction(string line)
   {
-    int address = Int32.Parse(line.Substring(1));
-    DebugPrinter.Print(Convert.ToString(address, 2).PadLeft(16, '0'));
+    Int16 address = Int16.Parse(line.Substring(1));
+    CurOutput = address;
+    Outputs.Add(address);
   }
 
   private enum InstructionType
