@@ -1,7 +1,54 @@
+using System.Text;
+
 public class Parser
 {
+  private StreamReader fileStream { get; set; };
 
-  private FileInfo currentFile { get; set; } = null;
+  public Parser(string path)
+  {
+    var file = new FileInfo(path);
+    if (!file.Exists)
+    {
+      DebugPrinter.Print($"The file {file.FullName} doesn't exist");
+      Environment.Exit(1);
+    }
+
+    DebugPrinter.Print($"Parsing {file.FullName}\n");
+    fileStream = new StreamReader(file.FullName, Encoding.UTF8
+      // while (!streamReader.EndOfStream) 
+      // {
+      //   var line = streamReader.ReadLine();
+      //   if (!line.Any() || line.StartsWith("//")) continue;
+      //
+      //   if (line.StartsWith("@")) ReadAInstruction(line);
+      //   else ReadCInstruction(line);
+      // }
+  }
+
+  private enum instructionType
+  {
+    A_INSTRUCTION,
+    C_INSTRUCTION,
+    L_INSTRUCTION,
+  }
+
+  private enum JumpType
+  {
+    JGT,
+    JEQ,
+    JGE,
+    JLT,
+    JLE,
+    JMP
+  }
+
+  private enum RegisterType
+  {
+    D,
+    A,
+    M,
+  }
+
   private int Line { get; set; } = 0;
   private int Col { get; set; } = 0;
 
@@ -9,27 +56,31 @@ public class Parser
   /// Reads the specified file and changes the internal Assembler state
   /// </summary>
   private void Parse(FileInfo file) {
-    using (StreamReader streamReader = new StreamReader(file.FullName, Encoding.UTF8))
-    {
-      DebugPrinter.Print($"Interpreting {currentFile.FullName}\n");
-      while (!streamReader.EndOfStream) 
-      {
-        var line = streamReader.ReadLine();
-        if (!line.Any() || line.StartsWith("//")) continue;
-
-        if (line.StartsWith("@")) ReadAInstruction(line);
-        else ReadCInstruction(line);
-      }
-    }
+    
   }
-  private void ReadFile(string path)
+
+  private bool hasMoreLines()
   {
-    this.currentFile = new FileInfo(path);
-    if (!currentFile.Exists)
-    {
-      DebugPrinter.Print($"The file {currentFile.FullName} doesn't exist");
-      Environment.Exit(1);
-    }
+  }
+
+  private void advance()
+  {
+  }
+
+  private string symbol()
+  {
+  }
+
+  private string dest()
+  {
+  }
+
+  private string comp()
+  {
+  }
+
+  private string jump()
+  {
   }
 
   void ReadCInstruction(string line)
