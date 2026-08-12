@@ -11,12 +11,19 @@ public class Parser
     var file = new FileInfo(path);
     if (!file.Exists)
     {
-      DebugPrinter.Print($"The file {file.FullName} doesn't exist");
+      DebugPrinter.PrintValue($"The file {file.FullName} doesn't exist");
       Environment.Exit(1);
     }
 
-    DebugPrinter.Print($"Parsing {file.FullName}\n");
+    DebugPrinter.PrintValue($"Parsing {file.FullName}\n");
     fileStream = new StreamReader(file.FullName, Encoding.UTF8);
+  }
+
+  public enum CTokenType 
+  {
+    DEST,
+    COMP,
+    JUMP
   }
 
   public enum InstructionTypeEnum
@@ -53,6 +60,18 @@ public class Parser
     
   }
 
+  public CTokenType getTokenType(string token)
+  {
+    JumpType[] jumpTypes = {JumpType.JGT, JumpType.JEQ, JumpType.JGE, JumpType.JLT, JumpType.JLE, JumpType.JMP};
+    var jumps = new List<string>();
+    foreach (var jump in jumpTypes)
+    {
+      jumps.Add(jump.ToString());
+    }
+    if (jumps.Contains(token)) return CTokenType.JUMP;
+    return CTokenType.DEST;
+  }
+
   public InstructionTypeEnum instructionType() {
     if (curLine.StartsWith("@")) return InstructionTypeEnum.A_INSTRUCTION;
     else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
@@ -61,7 +80,9 @@ public class Parser
 
   public bool hasMoreLines()
   {
-    return fileStream.EndOfStream;
+    var eof = fileStream.EndOfStream;
+    DebugPrinter.PrintValue($"Is at end of file? > {eof}");
+    return eof;
   }
 
   public void advance()
@@ -72,6 +93,7 @@ public class Parser
 
   public string symbol()
   {
+    DebugPrinter.PrintValue("Fetching Symbol");
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
       return curLine.Substring(1);
@@ -88,6 +110,7 @@ public class Parser
 
   public string dest()
   {
+    DebugPrinter.PrintValue("Fetching Dest");
     if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
     {
       // WARN: Retornar erro aqui
@@ -100,6 +123,7 @@ public class Parser
 
   public string comp()
   {
+    DebugPrinter.PrintValue("Fetching Comp");
     if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
     {
       // WARN: Retornar erro aqui
@@ -110,10 +134,23 @@ public class Parser
                       // e que eh de tamanho 1 o simbolo
   }
 
+  private string[] getTokens(string line)
+  {
+    DebugPrinter.PrintValue(line);
+    var tokens = line.Split();
+    return tokens;
+  }
+
   public string jump()
   {
-    var tokens = curLine.ToCharArray();
-    return tokens[3].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
+    DebugPrinter.PrintValue("Fetching Jump");
+    var tokens = getTokens(curLine);
+    string jump_token = "";
+    foreach (var token in tokens)
+    {
+      if (getTokenType(token) == CTokenType.JUMP) jump_token = token;
+    }
+    return jump_token; // WARN: Assume que o camp `dest` foi preenchido corretamente,
                       // e que eh de tamanho 1 o simbolo
   }
 
@@ -194,7 +231,7 @@ public class Parser
 
     foreach (var instruction in instructions)
     {
-      DebugPrinter.Print(instruction);
+      DebugPrinter.PrintValue(instruction);
     }
   }
 }

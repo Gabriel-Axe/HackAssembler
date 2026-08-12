@@ -6,13 +6,13 @@ static class DebugPrinter
   {
     if (DEBUG)
     {
-      Print($"{line}");
+      PrintValue($"{line}");
     }
   }
 
-  public static void Print(object? value)
+  public static void PrintValue(object? value)
   {
-    Console.Write(value);
+    Console.WriteLine(value);
   }
 
   public static void NewLine()

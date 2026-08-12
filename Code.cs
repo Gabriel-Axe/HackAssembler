@@ -9,16 +9,18 @@ public class Code
   {
     using (StreamWriter sw = File.CreateText("./Output.asm"))
     {
+      // DebugPrinter.PrintValue(binList.Any());
       foreach (var bin in binList)
       {
+        DebugPrinter.PrintValue($": Outputing {bin}");
         sw.WriteLine(bin);
       }
     }
   }
 
-  public string address(string val)
-  {
-  }
+  // public string address(string val)
+  // {
+  // }
 
   public string dest(string val)
   {

@@ -11,26 +11,31 @@ public class Assembler
   public Assembler(string path)
   {
     AssemblerParser = new(path);
+    Outputs = new();
   }
 
-  public void Execute(string path)
+  public void Execute()
   {
     var parser = AssemblerParser;
     var code = AssemblerCode;
-    while (parser.hasMoreLines())
+
+    while (!parser.hasMoreLines())
     {
+      DebugPrinter.PrintValue("Advancing in File");
       parser.advance();
       var type = parser.instructionType();
       switch (type)
       {
         case Parser.InstructionTypeEnum.A_INSTRUCTION:
+          DebugPrinter.PrintValue("Parsing A Instruction");
           var symbol = parser.symbol();
           var int_symbol = int.Parse(symbol);
           var bin = Convert.ToString(int_symbol, 2);
           Outputs.Add(bin);
           break;
         case Parser.InstructionTypeEnum.C_INSTRUCTION:
-          var c_initial = "111";
+          DebugPrinter.PrintValue("Parsing C Instruction");
+          var c_initial = "1111";
           var dest = parser.dest();
           var comp = parser.comp();
           var jump = parser.jump();

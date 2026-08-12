@@ -6,10 +6,10 @@ public class Program
   {
     if (args.Length <= 0)
     {
-      DebugPrinter.Print("No file path was provided");
+      DebugPrinter.PrintValue("No file path was provided");
     }
 
-    var assembler = new Assembler();
-    assembler.Execute(args[0]);
+    var assembler = new Assembler(args[0]);
+    assembler.Execute();
   }
 }
