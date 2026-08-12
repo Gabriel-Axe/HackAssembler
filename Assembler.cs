@@ -30,7 +30,7 @@ public class Assembler
           DebugPrinter.PrintValue("Parsing A Instruction");
           var symbol = parser.symbol();
           var int_symbol = int.Parse(symbol);
-          var bin = Convert.ToString(int_symbol, 2);
+          var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
           Outputs.Add(bin);
           break;
         case Parser.InstructionTypeEnum.C_INSTRUCTION:
@@ -47,8 +47,11 @@ public class Assembler
           var builder = new StringBuilder();
           builder
             .Append(c_initial)
+            .Append("_")
             .Append(comp_bin)
+            .Append("_")
             .Append(dest_bin)
+            .Append("_")
             .Append(jump_bin);
 
           var c_instruction = builder.ToString();
