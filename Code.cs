@@ -20,6 +20,44 @@ public class Code
     }
   }
 
+  string dest(string val)
+  {
+    switch (val)
+    {
+      case "M":
+        return "001";
+      case "D":
+        return "010";
+      case "A":
+        return "100";
+      default:
+        return "000";
+    }
+  }
+  string comp(string val)
+  {
+  }
+  string jump(string val)
+  {
+    switch (val)
+    {
+      case "JGT":
+        return "001";
+      case "JEQ":
+        return "010";
+      case "JGE":
+        return "100";
+      case "JLT":
+        return "101";
+      case "JNE":
+        return "110";
+      case "JMP":
+        return "111";
+      default:
+        return "000";
+    }
+  }
+
   void BuildCInstruction()
   {
     int c_initial = 0b1110_0000_0000_0000;
