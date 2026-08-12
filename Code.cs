@@ -5,18 +5,22 @@ public class Code
   private List<Int16> Outputs  { get; set; } = new();
   private bool InMemory {get; set;} = false;
 
-  private void OutputFile(string path)
+  public void outputFile(List<string> binList)
   {
-    using (BinaryWriter writer = new BinaryWriter(File.OpenWrite(path)))
+    using (StreamWriter sw = File.CreateText("./Output.asm"))
     {
-      foreach (var instruction in Outputs)
+      foreach (var bin in binList)
       {
-        writer.Write(instruction);
+        sw.WriteLine(bin);
       }
     }
   }
 
-  string dest(string val)
+  public string address(string val)
+  {
+  }
+
+  public string dest(string val)
   {
     switch (val)
     {
@@ -30,7 +34,8 @@ public class Code
         return "000";
     }
   }
-  string comp(string val)
+
+  public string comp(string val)
   {
     if (val == "0") return "101010";
     if (val == "1") return "111111";
@@ -51,7 +56,7 @@ public class Code
     if (val == "D|A") return "010101";
     return "000000";
   }
-  string jump(string val)
+  public string jump(string val)
   {
     switch (val)
     {

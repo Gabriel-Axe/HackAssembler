@@ -19,7 +19,7 @@ public class Parser
     fileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
 
-  private enum InstructionTypeEnum
+  public enum InstructionTypeEnum
   {
     A_INSTRUCTION,
     C_INSTRUCTION,
@@ -53,24 +53,24 @@ public class Parser
     
   }
 
-  private InstructionTypeEnum instructionType() {
+  public InstructionTypeEnum instructionType() {
     if (curLine.StartsWith("@")) return InstructionTypeEnum.A_INSTRUCTION;
     else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
     else return InstructionTypeEnum.L_INSTRUCTION;
   }
 
-  private bool hasMoreLines()
+  public bool hasMoreLines()
   {
     return fileStream.EndOfStream;
   }
 
-  private void advance()
+  public void advance()
   {
     curLine = fileStream.ReadLine();
     if (!curLine.Any() || curLine.StartsWith("//")) advance();
   }
 
-  private string symbol()
+  public string symbol()
   {
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
@@ -86,7 +86,7 @@ public class Parser
     // }
   }
 
-  private string dest()
+  public string dest()
   {
     if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
     {
@@ -98,7 +98,7 @@ public class Parser
                       // e que eh de tamanho 1 o simbolo
   }
 
-  private string comp()
+  public string comp()
   {
     if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
     {
@@ -110,7 +110,7 @@ public class Parser
                       // e que eh de tamanho 1 o simbolo
   }
 
-  private string jump()
+  public string jump()
   {
     var tokens = curLine.ToCharArray();
     return tokens[3].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
