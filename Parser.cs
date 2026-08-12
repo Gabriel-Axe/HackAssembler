@@ -3,6 +3,8 @@ using System.Text;
 public class Parser
 {
   private StreamReader fileStream { get; set; };
+  private InstructionTypeEnum curInstructionType { get; set; }
+  private string curLine { get; set; }
 
   public Parser(string path)
   {
@@ -25,7 +27,7 @@ public class Parser
       // }
   }
 
-  private enum instructionType
+  private enum InstructionTypeEnum
   {
     A_INSTRUCTION,
     C_INSTRUCTION,
@@ -59,28 +61,66 @@ public class Parser
     
   }
 
+  private InstructionTypeEnum instructionType() {
+    if (curLine.StartsWith("@") return InstructionTypeEnum.A_INSTRUCTION;
+    else if (curLine.Contains("=") return InstructionTypeEnum.C_INSTRUCTION;
+    else return InstructionTypeEnum.L_INSTRUCTION;
+  }
+
   private bool hasMoreLines()
   {
+    return fileStream.EndOfStream
   }
 
   private void advance()
   {
+    curLine = fileStream.ReadLine();
   }
 
   private string symbol()
   {
+    if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
+    {
+      return curLine.Substring(1);
+    }
+    else if (curInstructionType == InstructionTypeEnum.L_INSTRUCTION)
+    {
+      return curInstructionType;
+    }
+    else {
+      // WARN: Retornar erro aqui
+    }
   }
 
   private string dest()
   {
+    if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
+    {
+      // WARN: Retornar erro aqui
+    }
+
+    var tokens = curLine.ToCharArray();
+    return tokens[0].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
+                      // e que eh de tamanho 1 o simbolo
   }
 
   private string comp()
   {
+    if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
+    {
+      // WARN: Retornar erro aqui
+    }
+
+    var tokens = curLine.ToCharArray();
+    return tokens[2].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
+                      // e que eh de tamanho 1 o simbolo
   }
 
   private string jump()
   {
+    var tokens = curLine.ToCharArray();
+    return tokens[3].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
+                      // e que eh de tamanho 1 o simbolo
   }
 
   void ReadCInstruction(string line)
