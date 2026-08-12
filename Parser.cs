@@ -2,7 +2,7 @@ using System.Text;
 
 public class Parser
 {
-  private StreamReader fileStream { get; set; };
+  private StreamReader fileStream { get; set; }
   private InstructionTypeEnum curInstructionType { get; set; }
   private string curLine { get; set; }
 
@@ -16,15 +16,7 @@ public class Parser
     }
 
     DebugPrinter.Print($"Parsing {file.FullName}\n");
-    fileStream = new StreamReader(file.FullName, Encoding.UTF8
-      // while (!streamReader.EndOfStream) 
-      // {
-      //   var line = streamReader.ReadLine();
-      //   if (!line.Any() || line.StartsWith("//")) continue;
-      //
-      //   if (line.StartsWith("@")) ReadAInstruction(line);
-      //   else ReadCInstruction(line);
-      // }
+    fileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
 
   private enum InstructionTypeEnum
@@ -62,19 +54,20 @@ public class Parser
   }
 
   private InstructionTypeEnum instructionType() {
-    if (curLine.StartsWith("@") return InstructionTypeEnum.A_INSTRUCTION;
-    else if (curLine.Contains("=") return InstructionTypeEnum.C_INSTRUCTION;
+    if (curLine.StartsWith("@")) return InstructionTypeEnum.A_INSTRUCTION;
+    else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
     else return InstructionTypeEnum.L_INSTRUCTION;
   }
 
   private bool hasMoreLines()
   {
-    return fileStream.EndOfStream
+    return fileStream.EndOfStream;
   }
 
   private void advance()
   {
     curLine = fileStream.ReadLine();
+    if (!curLine.Any() || curLine.StartsWith("//")) advance();
   }
 
   private string symbol()
@@ -85,11 +78,12 @@ public class Parser
     }
     else if (curInstructionType == InstructionTypeEnum.L_INSTRUCTION)
     {
-      return curInstructionType;
+      return curLine;
     }
-    else {
-      // WARN: Retornar erro aqui
-    }
+    return "";
+    // else {
+    //   // WARN: Retornar erro aqui
+    // }
   }
 
   private string dest()

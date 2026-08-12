@@ -9,6 +9,5 @@ public class Assembler
 
   public void Execute(string path)
   {
-    AssemblerParser.
   }
 }
