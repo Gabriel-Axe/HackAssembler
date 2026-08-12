@@ -36,6 +36,23 @@ public class Code
   }
   string comp(string val)
   {
+    if (val == "0") return "101010";
+    if (val == "1") return "111111";
+    if (val == "D") return "001100";
+    if (val == "A") return "110000";
+    if (val == "!A") return "110001";
+    if (val == "!D") return "001101";
+    if (val == "-D") return "001111";
+    if (val == "-A") return "110011";
+    if (val == "D+1") return "011111";
+    if (val == "A+1") return "110111";
+    if (val == "D-1") return "001110";
+    if (val == "A-1") return "110010";
+    if (val == "D+A") return "000010";
+    if (val == "D-A") return "010011";
+    if (val == "A-D") return "000111";
+    if (val == "D&A") return "000000";
+    if (val == "D|A") return "010101";
   }
   string jump(string val)
   {
