@@ -35,7 +35,7 @@ public class Assembler
           break;
         case Parser.InstructionTypeEnum.C_INSTRUCTION:
           DebugPrinter.PrintValue("Parsing C Instruction");
-          var c_initial = "1111";
+          var c_initial = "111";
           var dest = parser.dest();
           var comp = parser.comp();
           var jump = parser.jump();
