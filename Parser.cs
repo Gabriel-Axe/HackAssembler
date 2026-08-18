@@ -1,9 +1,14 @@
+namespace HackAssembler;
+
 using System.Text;
+using HackAssembler;
+using Level = HackAssembler.DebugPrinter.LogLevels;
 
 public class Parser
 {
   private StreamReader fileStream { get; set; }
   private InstructionTypeEnum curInstructionType { get; set; }
+  public int parsedLines { get; private set; } = 0;
   private string curLine { get; set; }
 
   public Parser(string path)
@@ -11,13 +16,15 @@ public class Parser
     var file = new FileInfo(path);
     if (!file.Exists)
     {
-      DebugPrinter.PrintValue($"The file {file.FullName} doesn't exist");
+      DebugPrinter.Log($"The file {file.FullName} doesn't exist", Level.INFO);
       Environment.Exit(1);
     }
 
-    DebugPrinter.PrintValue($"Parsing {file.FullName}\n");
+    DebugPrinter.Log($"Parsing {file.FullName}\n", Level.INFO);
     fileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
+
+  public void incrementParsedLines() => parsedLines++;
 
   public enum CTokenType 
   {
@@ -74,14 +81,16 @@ public class Parser
 
   public InstructionTypeEnum instructionType() {
     if (curLine.StartsWith("@")) return InstructionTypeEnum.A_INSTRUCTION;
-    else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
-    else return InstructionTypeEnum.L_INSTRUCTION;
+    else if (curLine.StartsWith("(") return InstructionTypeEnum.L_INSTRUCTION;
+    else return InstructionTypeEnum.C_INSTRUCTION;
+    // else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
+    // else return InstructionTypeEnum.L_INSTRUCTION;
   }
 
   public bool hasMoreLines()
   {
     var eof = fileStream.EndOfStream;
-    DebugPrinter.PrintValue($"Is at end of file? > {eof}");
+    DebugPrinter.Log($"end of file?  {eof}", Level.TRACE);
     return eof;
   }
 
@@ -93,7 +102,7 @@ public class Parser
 
   public string symbol()
   {
-    DebugPrinter.PrintValue("Fetching Symbol");
+    DebugPrinter.Log("Fetching Symbol", Level.TRACE);
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
       return curLine.Substring(1);
@@ -110,48 +119,122 @@ public class Parser
 
   public string dest()
   {
-    DebugPrinter.PrintValue("Fetching Dest");
-    if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
+    if (!hasDest()) 
     {
-      // WARN: Retornar erro aqui
+      DebugPrinter.Log("no dest, skip", Level.DEBUG);
+      return "";
     }
-
-    var tokens = curLine.ToCharArray();
-    return tokens[0].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
+    DebugPrinter.Log("Fetching Dest", Level.TRACE);
+    var lexemes = curLine.ToCharArray();
+    string dest = "";
+    var builder = new StringBuilder();
+    DebugPrinter.Log($"curLine: {curLine}", Level.DEBUG);
+    for (var i = 0; i < lexemes.Length; i++)
+    {
+      DebugPrinter.Log($"lexeme length: {lexemes.Length}, i: {i}", Level.TRACE);
+      builder.Append(lexemes[i]);
+      if (lexemes.Length > i + 1 && (lexemes[i + 1] == '=' || lexemes[i + 1] == ';')) break;
+    }
+    dest = builder.ToString();
+    return dest; // WARN: Assume que o camp `dest` foi preenchido corretamente,
                       // e que eh de tamanho 1 o simbolo
   }
 
   public string comp()
   {
-    DebugPrinter.PrintValue("Fetching Comp");
-    if (curInstructionType != InstructionTypeEnum.C_INSTRUCTION)
-    {
-      // WARN: Retornar erro aqui
-    }
+    DebugPrinter.Log("Fetching Comp", Level.TRACE);
 
-    var tokens = curLine.ToCharArray();
-    return tokens[2].ToString(); // WARN: Assume que o camp `dest` foi preenchido corretamente,
+    var lexemes = curLine.ToCharArray();
+    string comp = "";
+    var builder = new StringBuilder();
+    var found = false;
+    if (hasDest())
+    {
+      for (var i = 0; i < lexemes.Length; i++)
+      {
+        if (lexemes[i] != '=' && !found) continue;
+        found = true;
+        if (lexemes[i] == '=') continue;
+        builder.Append(lexemes[i]);
+        if (i + 1 < lexemes.Length && lexemes[i + 1] == ';') break;
+      }
+    } 
+    else
+    {
+      for (var i = 0; i < lexemes.Length; i++)
+      {
+        builder.Append(lexemes[i]);
+        if (i + 1 < lexemes.Length && lexemes[i + 1] == ';') break;
+      }
+    }
+    comp = builder.ToString();
+    return comp; // WARN: Assume que o camp `dest` foi preenchido corretamente,
                       // e que eh de tamanho 1 o simbolo
+
+    // var tokens = getTokens(curLine);
+    // var builder = new StringBuilder();
+    // for (int i = 0; i < tokens.Length; i++)
+    // {
+    //   DebugPrinter.Log($"Seeing if tokens[i] equals ;");
+    //   var reachedJump = tokens[i].Equals(";");
+    //   if (reachedJump) break;
+    //   DebugPrinter.Log($"tokens[i] does not equals ;");
+    //   DebugPrinter.Log($"Appending tokens[i] ({tokens[i]})");
+    //   builder.Append(tokens[i]);
+    // }
+    // var returning = builder.ToString();
+    // DebugPrinter.Log($"Returning returining ({returning}");
+    // return returning; // WARN: Assume que o camp `dest` foi preenchido corretamente,
+    //                   // e que eh de tamanho 1 o simbolo
+  }
+
+  public bool hasDest() 
+  {
+    var line = curLine;
+    for (int i = 0; i < line.Length; i++)
+    {
+      if (line[i] == '=') return true;
+    }
+    return false;
   }
 
   private string[] getTokens(string line)
   {
-    DebugPrinter.PrintValue(line);
+    DebugPrinter.Log(line, Level.DEBUG);
     var tokens = line.Split();
     return tokens;
   }
 
   public string jump()
   {
-    DebugPrinter.PrintValue("Fetching Jump");
-    var tokens = getTokens(curLine);
-    string jump_token = "";
-    foreach (var token in tokens)
+    DebugPrinter.Log("Fetching Jump", Level.TRACE);
+
+    var lexemes = curLine.ToCharArray();
+    string jump = "";
+    var builder = new StringBuilder();
+    var found = false;
+    int i = 0;
+    for (i = 0; i < lexemes.Length; i++)
     {
-      if (getTokenType(token) == CTokenType.JUMP) jump_token = token;
+      if (lexemes[i] != ';' && !found) 
+      {
+        DebugPrinter.Log("; not found yet, continuing", Level.DEBUG);
+        continue;
+      }
+      found = true;
+      if (lexemes[i] == ';')
+      {
+        DebugPrinter.Log(";, continuing", Level.DEBUG);
+        continue;
+      }
+      builder.Append(lexemes[i]);
+      // DebugPrinter.Log($"i + 1 = {lexemes[i+1]}", Level.DEBUG);
+      DebugPrinter.Log($"lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i]}", Level.DEBUG);
+      if (i + 1 > lexemes.Length) break;
     }
-    return jump_token; // WARN: Assume que o camp `dest` foi preenchido corretamente,
-                      // e que eh de tamanho 1 o simbolo
+    DebugPrinter.Log($"(finished loop) lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i-1]}", Level.DEBUG);
+    jump = builder.ToString();
+    return jump; // WARN: Assume que o camp `dest` foi preenchido corretamente,
   }
 
   void ReadCInstruction(string line)
@@ -231,7 +314,13 @@ public class Parser
 
     foreach (var instruction in instructions)
     {
-      DebugPrinter.PrintValue(instruction);
+      DebugPrinter.Log($"{instruction}", Level.DEBUG);
     }
   }
+}
+
+public class CInstruction(string dest, string comp, string? jump) {
+  public string dest { get; init; }
+  public string comp { get; init; }
+  public string? jump { get; init; }
 }

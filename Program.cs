@@ -1,4 +1,6 @@
 ﻿using System.Text;
+using Level = HackAssembler.DebugPrinter.LogLevels;
+using HackAssembler;
 
 public class Program
 {
@@ -6,7 +8,7 @@ public class Program
   {
     if (args.Length <= 0)
     {
-      DebugPrinter.PrintValue("No file path was provided");
+      DebugPrinter.Log("No file path was provided", Level.INFO);
     }
 
     var assembler = new Assembler(args[0]);

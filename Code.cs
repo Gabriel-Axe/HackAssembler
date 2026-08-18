@@ -1,3 +1,6 @@
+using HackAssembler;
+using Level = HackAssembler.DebugPrinter.LogLevels;
+
 public class Code
 {
   private Int16 CurAddress { get; set; } = 0;
@@ -7,31 +10,37 @@ public class Code
 
   public void outputFile(List<string> binList)
   {
-    using (StreamWriter sw = File.CreateText("./Output.asm"))
+    using (StreamWriter sw = File.CreateText("./Output.hack"))
     {
       // DebugPrinter.PrintValue(binList.Any());
       foreach (var bin in binList)
       {
-        DebugPrinter.PrintValue($": Outputing {bin}");
+        DebugPrinter.Log($"output bin: {bin}", Level.TRACE);
         sw.WriteLine(bin);
       }
     }
   }
 
-  // public string address(string val)
-  // {
-  // }
-
   public string dest(string val)
   {
+    DebugPrinter.Log($"received dest {val} as val", Level.DEBUG);
     switch (val)
     {
       case "M":
         return "001";
+      case "AM":
+        return "101";
       case "D":
         return "010";
+      case "DM":
+      case "MD":
+        return "011";
+      case "AD":
+        return "110";
       case "A":
         return "100";
+      case "ADM":
+        return "111";
       default:
         return "000";
     }
@@ -41,6 +50,7 @@ public class Code
   {
     if (val == "0") return "0101010";
     if (val == "1") return "0111111";
+    if (val == "-1") return "0111010";
     if (val == "D") return "0001100";
     if (val == "A") return "0110000";
     if (val == "M") return "1110000";
@@ -70,6 +80,7 @@ public class Code
   }
   public string jump(string val)
   {
+    DebugPrinter.Log($"received jump {val} as val", Level.DEBUG);
     switch (val)
     {
       case "JGT":
@@ -77,10 +88,12 @@ public class Code
       case "JEQ":
         return "010";
       case "JGE":
-        return "100";
+        return "011";
       case "JLT":
-        return "101";
+        return "100";
       case "JNE":
+        return "101";
+      case "JLE":
         return "110";
       case "JMP":
         return "111";
