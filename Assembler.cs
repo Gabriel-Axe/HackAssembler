@@ -10,6 +10,7 @@ public class Assembler
 
   private Parser AssemblerParser { get; init; }
   private Code AssemblerCode { get; init; } = new();
+  private SymbolTable AssemblerSymbolTable { get; init; } = new();
   private List<string> Outputs { get; set; }
 
   public Assembler(string path)

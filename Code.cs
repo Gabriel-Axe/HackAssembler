@@ -45,7 +45,6 @@ public class Code
         return "000";
     }
   }
-
   public string comp(string val)
   {
     if (val == "0") return "0101010";
