@@ -29,16 +29,17 @@ public class Assembler
   {
     var parser = AssemblerParser;
     var code = AssemblerCode;
+    ReadAllSymbols();
 
     while (!parser.hasMoreLines())
     {
       DebugPrinter.Log("advancing parser", Level.TRACE);
       parser.advance();
+      var symbol = parser.symbol();
       var type = parser.instructionType();
       switch (type)
       {
         case Parser.InstructionTypeEnum.A_INSTRUCTION:
-          var symbol = parser.symbol();
           DebugPrinter.Log($"parse A instruction: @{symbol}", Level.DEBUG);
           var int_symbol = int.Parse(symbol);
           var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
@@ -76,11 +77,27 @@ public class Assembler
           parser.incrementParsedLines();
           break;
         case Parser.InstructionTypeEnum.L_INSTRUCTION:
-
+          DebugPrinter.Log($"Adding {symbol} of type {parser.instructionType()} to entries 2", Level.TRACE);
+          AssemblerSymbolTable.addEntry(symbol);
           break;
       }
     }
     DebugPrinter.Log($"parsed lines: {parser.parsedLines}", Level.DEBUG);
     code.outputFile(Outputs);
+  }
+
+  private void ReadAllSymbols()
+  {
+    var parser = AssemblerParser.Clone();
+    while (parser.hasMoreLines())
+    {
+      var type = parser.instructionType();
+      if (type == Parser.InstructionTypeEnum.L_INSTRUCTION)
+      {
+        var symbol = parser.symbol();
+        DebugPrinter.Log("Adding to entries 1", Level.TRACE);
+        AssemblerSymbolTable.addEntry(symbol);
+      }
+    }
   }
 }

@@ -6,6 +6,7 @@ using Level = HackAssembler.DebugPrinter.LogLevels;
 
 public class Parser
 {
+  private string Path { get; set; }
   private StreamReader fileStream { get; set; }
   private InstructionTypeEnum curInstructionType { get; set; }
   public int parsedLines { get; private set; } = 0;
@@ -13,6 +14,7 @@ public class Parser
 
   public Parser(string path)
   {
+    Path = path;
     var file = new FileInfo(path);
     if (!file.Exists)
     {
@@ -80,11 +82,38 @@ public class Parser
   }
 
   public InstructionTypeEnum instructionType() {
-    if (curLine.StartsWith("@")) return InstructionTypeEnum.A_INSTRUCTION;
-    else if (curLine.StartsWith("(") return InstructionTypeEnum.L_INSTRUCTION;
-    else return InstructionTypeEnum.C_INSTRUCTION;
+    InstructionTypeEnum nextType = InstructionTypeEnum.A_INSTRUCTION;
+    if (curLine.StartsWith("@")) 
+    {
+      nextType = InstructionTypeEnum.A_INSTRUCTION;
+    }
+    else if (curLine.StartsWith("(")) 
+    {
+      nextType = InstructionTypeEnum.L_INSTRUCTION;
+    }
+    else 
+    {
+      nextType = InstructionTypeEnum.C_INSTRUCTION;
+    }
+    DebugPrinter.Log($"Changing type from {curInstructionType} to {nextType}", Level.TRACE);
+    curInstructionType = nextType;
+    return nextType;
     // else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
     // else return InstructionTypeEnum.L_INSTRUCTION;
+  }
+
+  public void handleAInstrution(string line, SymbolTable symbolTable)
+  {
+    var builder = new StringBuilder();
+    for (int i = 0; i > line.Length; i++)
+    {
+      if (line[i] == '@') continue;
+      builder.Append(line[i]);
+    }
+
+    var contents = builder.ToString();
+    if (int.TryParse(contents, out _)) return;
+    if (!symbolTable.contains(contents)) symbolTable.addEntry(contents);
   }
 
   public bool hasMoreLines()
@@ -98,6 +127,7 @@ public class Parser
   {
     curLine = fileStream.ReadLine();
     if (!curLine.Any() || curLine.StartsWith("//")) advance();
+    curInstructionType = instructionType();
   }
 
   public string symbol()
@@ -109,7 +139,9 @@ public class Parser
     }
     else if (curInstructionType == InstructionTypeEnum.L_INSTRUCTION)
     {
-      return curLine;
+      var returning = curLine.Substring(1, curLine.Length - 2);
+      DebugPrinter.Log($"L Instruction {curLine} received, returning {returning}", Level.DEBUG);
+      return returning;
     }
     return "";
     // else {
@@ -317,6 +349,8 @@ public class Parser
       DebugPrinter.Log($"{instruction}", Level.DEBUG);
     }
   }
+
+  public Parser Clone() => new Parser(this.Path);
 }
 
 public class CInstruction(string dest, string comp, string? jump) {

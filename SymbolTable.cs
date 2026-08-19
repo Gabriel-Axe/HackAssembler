@@ -6,6 +6,8 @@ using Level = HackAssembler.DebugPrinter.LogLevels;
 public class SymbolTable
 {
 
+  public int currentCount { get; private set; } = 0;
+
   public SymbolTable() {}
 
   private Dictionary<string, int> symbols { get; set; } = new Dictionary<string, int>()
@@ -32,16 +34,25 @@ public class SymbolTable
     { "THIS", 3 },
     { "THAT", 4 },
     { "SCREEN", 0x4000 },
-    { "SCREEN", 0x6000 } 
+    { "KBD", 0x6000 } 
   };
 
   public void addEntry(string symbol, int address)
   {
-    if (symbols.TryAdd(symbol, address)) 
+    if (contains(symbol)) 
     {
       DebugPrinter.Log("Error: symbol already exists",  Level.INFO);
       Environment.Exit(1);
     }
+    DebugPrinter.Log($"Adding {symbol} with address {address} in Symbol Table", Level.DEBUG);
+
+    symbols.Add(symbol, address);
+  }
+
+  public void addEntry(string symbol)
+  {
+    addEntry(symbol, currentCount);
+    currentCount++;
   }
 
   public bool contains(string symbol)
