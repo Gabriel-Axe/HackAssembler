@@ -18,8 +18,13 @@ public class Assembler
 
   public void AddToOutputs(string stored)
   {
-    DebugPrinter.LogAction("assembler", $"store in Outputs: {stored}");
+    LogAssemblerAction($"store in Outputs: {stored}");
     Outputs.Add(stored);
+  }
+
+  private void LogAssemblerAction(string what)
+  {
+    DebugPrinter.LogAction("assembler", what);
   }
 
   public void Execute()
@@ -30,18 +35,18 @@ public class Assembler
 
     while (!parser.hasMoreLines())
     {
-      DebugPrinter.LogAction("parser", "advance");
       parser.advance();
       var symbol = parser.symbol();
       var type = parser.instructionType();
+      LogAssemblerAction("advancing in file");
       switch (type)
       {
         case Parser.InstructionTypeEnum.A_INSTRUCTION:
-          DebugPrinter.LogAction("parser", $"parse A instruction @{symbol}");
           var int_symbol = int.Parse(symbol);
           var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
           AddToOutputs(bin);
           parser.incrementParsedLines();
+          LogAssemblerAction($"parse A Instruction @{symbol}");
           break;
         case Parser.InstructionTypeEnum.C_INSTRUCTION:
           var c_initial = "111";
@@ -74,17 +79,17 @@ public class Assembler
           parser.incrementParsedLines();
           break;
         case Parser.InstructionTypeEnum.L_INSTRUCTION:
-          DebugPrinter.LogAction("assembler", $"add {symbol} type {parser.instructionType()} to symbol table 2");
           AssemblerSymbolTable.addEntry(symbol);
           break;
       }
     }
-    DebugPrinter.LogAction("assembler", $"parsed lines: {parser.parsedLines}");
+    LogAssemblerAction($"parsed lines: {parser.parsedMeaningfulLines}");
     code.outputFile(Outputs);
   }
 
   private void ReadAllSymbols()
   {
+    LogAssemblerAction("read all symbols");
     var parser = AssemblerParser.Clone();
     while (parser.hasMoreLines())
     {

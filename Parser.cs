@@ -20,7 +20,7 @@ public class Parser
       Environment.Exit(1);
     }
 
-    DebugPrinter.LogAction("parser", $"parse {file.FullName}\n");
+    LogParserAction($"parse {file.FullName}\n");
     fileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
 
@@ -93,8 +93,8 @@ public class Parser
     {
       nextType = InstructionTypeEnum.C_INSTRUCTION;
     }
-    DebugPrinter.LogAction("parser", $"change curInstructionType from {curInstructionType} to {nextType}");
     curInstructionType = nextType;
+    LogParserAction($"return instruction type {nextType}");
     return nextType;
     // else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
     // else return InstructionTypeEnum.L_INSTRUCTION;
@@ -130,16 +130,16 @@ public class Parser
 
   public string symbol()
   {
-    DebugPrinter.LogAction("parser", "fetch symbol");
+    LogParserAction("fetch symbol");
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
       return curLine.Substring(1);
     }
     else if (curInstructionType == InstructionTypeEnum.L_INSTRUCTION)
     {
-      DebugPrinter.LogAction("parser", $"L Instruction {curLine} received");
+      LogParserAction($"L Instruction {curLine} received");
       var returning = curLine.Substring(1, curLine.Length - 2);
-      DebugPrinter.LogAction("parser", $"returning {returning}");
+      LogParserAction($"returning {returning}");
       return returning;
     }
     return "";
@@ -152,7 +152,7 @@ public class Parser
   {
     if (!hasDest()) 
     {
-      DebugPrinter.LogAction("parser", "no dest, skip");
+      LogParserAction("no dest, skip");
       return "";
     }
     DebugPrinter.LogAction("parser", "fetch Dest");
@@ -238,7 +238,7 @@ public class Parser
 
   public string jump()
   {
-    DebugPrinter.LogAction("parser", "fetch Jump");
+    LogParserAction("fetch Jump");
 
     var lexemes = curLine.ToCharArray();
     string jump = "";
@@ -249,13 +249,13 @@ public class Parser
     {
       if (lexemes[i] != ';' && !found) 
       {
-        DebugPrinter.LogAction("parser", "';' not found, continuing");
+        LogParserAction("';' not found, continuing");
         continue;
       }
       found = true;
       if (lexemes[i] == ';')
       {
-        DebugPrinter.LogAction("parser", "';' fond, continuing");
+        LogParserAction("';' fond, continuing");
         continue;
       }
       builder.Append(lexemes[i]);
