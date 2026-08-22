@@ -6,9 +6,9 @@ public class Parser
 {
   private string Path { get; set; }
   private StreamReader fileStream { get; set; }
-  private InstructionTypeEnum curInstructionType { get; set; }
-  public int parsedLines { get; private set; } = 0;
-  private string curLine { get; set; }
+  private bool ShouldIncrement { get; set; } = true;
+  public int parsedMeaningfulLines { get; private set; } = 0;
+  public string curLine { get; private set; }
 
   public Parser(string path)
   {
@@ -24,7 +24,16 @@ public class Parser
     fileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
 
-  public void incrementParsedLines() => parsedLines++;
+  public void incrementParsedMeaningfulLines() 
+  {
+    // if (ShouldIncrement)
+    // {
+    ShouldIncrement = false;
+    var old = parsedMeaningfulLines;
+    parsedMeaningfulLines++;
+    LogParserAction($"increment parsedLines, old: {old} new: {parsedMeaningfulLines}");
+    // }
+  }
 
   public enum CTokenType 
   {
@@ -35,6 +44,7 @@ public class Parser
 
   public enum InstructionTypeEnum
   {
+    NO_INSTRUCTION,
     A_INSTRUCTION,
     C_INSTRUCTION,
     L_INSTRUCTION,
@@ -79,40 +89,56 @@ public class Parser
     return CTokenType.DEST;
   }
 
-  public InstructionTypeEnum instructionType() {
-    InstructionTypeEnum nextType = InstructionTypeEnum.A_INSTRUCTION;
-    if (curLine.StartsWith("@")) 
+  public InstructionTypeEnum instructionType(SymbolTable symbolTable) {
+
+    InstructionTypeEnum nextType = InstructionTypeEnum.NO_INSTRUCTION;
+
+    var isAInstruction = 
+      curLine.StartsWith("@");
+      // && (
+      //     int.TryParse(curLine.Substring(1), out _)
+      //     || symbolTable.contains(curLine.Substring(1)));
+
+    var isLInstruction = 
+      curLine.StartsWith("(") ;
+
+    if (isAInstruction) 
     {
       nextType = InstructionTypeEnum.A_INSTRUCTION;
+      this.ShouldIncrement = true;
     }
-    else if (curLine.StartsWith("(")) 
+    else if (isLInstruction) 
     {
       nextType = InstructionTypeEnum.L_INSTRUCTION;
     }
     else 
     {
+      this.ShouldIncrement = true;
       nextType = InstructionTypeEnum.C_INSTRUCTION;
     }
-    curInstructionType = nextType;
     LogParserAction($"return instruction type {nextType}");
     return nextType;
     // else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
     // else return InstructionTypeEnum.L_INSTRUCTION;
   }
 
-  public void handleAInstrution(string line, SymbolTable symbolTable)
+  private void LogParserAction(string what)
   {
-    var builder = new StringBuilder();
-    for (int i = 0; i > line.Length; i++)
-    {
-      if (line[i] == '@') continue;
-      builder.Append(line[i]);
-    }
-
-    var contents = builder.ToString();
-    if (int.TryParse(contents, out _)) return;
-    if (!symbolTable.contains(contents)) symbolTable.addEntry(contents);
+    DebugPrinter.LogAction("parser", what);
   }
+
+  // public void handleAInstrution(string line, SymbolTable symbolTable)
+  // {
+  //   var builder = new StringBuilder();
+  //   for (int i = 0; i > line.Length; i++)
+  //   {
+  //     if (line[i] == '@') continue;
+  //     builder.Append(line[i]);
+  //   }
+  //
+  //   var contents = builder.ToString();
+  //   if (int.TryParse(contents, out _)) return;
+  // }
 
   public bool hasMoreLines()
   {
@@ -121,14 +147,25 @@ public class Parser
     return eof;
   }
 
-  public void advance()
+  // WARN: I should not send inverted dependencies wtvr its convenient
+  public void advance(SymbolTable symbolTable)
   {
-    curLine = fileStream.ReadLine();
-    if (!curLine.Any() || curLine.StartsWith("//")) advance();
-    curInstructionType = instructionType();
+    LogParserAction("advance");
+    curLine = fileStream
+        .ReadLine()
+        .Trim();
+
+    if (!curLine.Any() || curLine.StartsWith("//")) 
+    {
+      advance(symbolTable);
+    }
+    else
+    {
+      DebugPrinter.LogState($"current line: {curLine}");
+    }
   }
 
-  public string symbol()
+  public string symbol(SymbolTable symbolTable)
   {
     LogParserAction("fetch symbol");
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
@@ -155,7 +192,7 @@ public class Parser
       LogParserAction("no dest, skip");
       return "";
     }
-    DebugPrinter.LogAction("parser", "fetch Dest");
+    LogParserAction("fetch Dest");
     var lexemes = curLine.ToCharArray();
     string dest = "";
     var builder = new StringBuilder();
@@ -173,7 +210,7 @@ public class Parser
 
   public string comp()
   {
-    DebugPrinter.LogAction("parser", "fetch comp");
+    LogParserAction("fetch comp");
 
     var lexemes = curLine.ToCharArray();
     string comp = "";
@@ -349,7 +386,11 @@ public class Parser
     }
   }
 
-  public Parser Clone() => new Parser(this.Path);
+  public Parser Clone()
+  {
+    LogParserAction("clone parser");
+    return new Parser(this.Path);
+  }
 }
 
 public class CInstruction(string dest, string comp, string? jump) {

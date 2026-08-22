@@ -34,6 +34,14 @@ public class SymbolTable
     { "KBD", 0x6000 } 
   };
 
+  public void OutputContents()
+  {
+    foreach (var (symbol, address) in this.symbols)
+    {
+      DebugPrinter.LogState($"symbol {symbol}: {address}");
+    }
+  }
+
   public void addEntry(string symbol, int address)
   {
     if (contains(symbol)) 
@@ -42,13 +50,14 @@ public class SymbolTable
       Environment.Exit(1);
     }
     DebugPrinter.LogAction("symbol table", $"add {symbol} with address {address} to Symbol Table");
-
     symbols.Add(symbol, address);
+    OutputContents();
   }
 
-  public void addEntry(string symbol)
+  public void addEntry(string symbol, Parser parser)
   {
-    addEntry(symbol, currentCount);
+    // addEntry(symbol, parser.parsedMeaningfulLines + 6);
+    addEntry(symbol, parser.parsedMeaningfulLines);
     currentCount++;
   }
 

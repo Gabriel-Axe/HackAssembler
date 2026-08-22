@@ -35,26 +35,45 @@ public class Assembler
 
     while (!parser.hasMoreLines())
     {
-      parser.advance();
-      var symbol = parser.symbol();
-      var type = parser.instructionType();
       LogAssemblerAction("advancing in file");
+      parser.advance(this.AssemblerSymbolTable);
+      DebugPrinter.LogState($"parsing line {parser.parsedMeaningfulLines}: {parser.curLine}");
+      var symbol = parser.symbol(this.AssemblerSymbolTable);
+      var type = parser.instructionType(this.AssemblerSymbolTable);
       switch (type)
       {
         case Parser.InstructionTypeEnum.A_INSTRUCTION:
-          var int_symbol = int.Parse(symbol);
-          var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
-          AddToOutputs(bin);
-          parser.incrementParsedLines();
           LogAssemblerAction($"parse A Instruction @{symbol}");
+          if (int.TryParse(symbol, out _))
+          {
+            var int_symbol = int.Parse(symbol);
+            var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
+            AddToOutputs(bin);
+          }
+          else
+          {
+            if (!this.AssemblerSymbolTable.contains(symbol))
+            {
+              // LogAssemblerAction("add entry 2");
+              LogAssemblerAction($"found non internal label {symbol}, continuing");
+              break;
+              // this.AssemblerSymbolTable.addEntry(symbol, AssemblerParser);
+            }
+
+              LogAssemblerAction($"found internal label {symbol}");
+            var int_symbol = this.AssemblerSymbolTable.getAddress(symbol);
+            var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
+            AddToOutputs(bin);
+          }
+          parser.incrementParsedMeaningfulLines();
           break;
         case Parser.InstructionTypeEnum.C_INSTRUCTION:
           var c_initial = "111";
           var dest = parser.dest();
           var comp = parser.comp();
           var jump = parser.jump();
-          if (parser.hasDest()) DebugPrinter.LogAction("parser", $"parse C instruction: {dest}={comp};{jump}");
-          else DebugPrinter.LogAction("parser", $"parse C instruction: {comp};{jump}");
+          if (parser.hasDest()) LogAssemblerAction($"parse C instruction: {dest}={comp};{jump}");
+          else LogAssemblerAction($"parse C instruction: {comp};{jump}");
           
           DebugPrinter.LogState($"dest: {dest}, comp: {comp}, jump: {jump}");
 
@@ -76,10 +95,18 @@ public class Assembler
           var c_instruction = builder.ToString();
           // DebugPrinter.PrintValue($"Instruction `{dest}={comp};{jump}` generated {c_instruction}");
           AddToOutputs(c_instruction);
-          parser.incrementParsedLines();
+          parser.incrementParsedMeaningfulLines();
           break;
         case Parser.InstructionTypeEnum.L_INSTRUCTION:
-          AssemblerSymbolTable.addEntry(symbol);
+          // WARN: WHY ARE YOU SAYING THIS IS L INSTRUCTION?
+          var address = parser.parsedMeaningfulLines;
+          DebugPrinter.LogState($"DS symbol: {symbol}, address: {address}");
+          LogAssemblerAction($"add {symbol} type {parser.instructionType(this.AssemblerSymbolTable)} address {address} in symbol table 2");
+
+          LogAssemblerAction("add entry 1");
+          parser.incrementParsedMeaningfulLines();
+          if (!AssemblerSymbolTable.contains(symbol)) 
+            AssemblerSymbolTable.addEntry(symbol, AssemblerParser);
           break;
       }
     }
@@ -93,12 +120,17 @@ public class Assembler
     var parser = AssemblerParser.Clone();
     while (parser.hasMoreLines())
     {
-      var type = parser.instructionType();
+      var type = parser.instructionType(this.AssemblerSymbolTable);
       if (type == Parser.InstructionTypeEnum.L_INSTRUCTION)
       {
-        var symbol = parser.symbol();
-        DebugPrinter.LogAction("assembler", $"add {symbol} type {parser.instructionType()} to symbol table 1");
-        AssemblerSymbolTable.addEntry(symbol);
+        // WARN: It seems like this code is not being used at
+        // all to add stuff to the symbol table
+        // WARN: This code isnt being executed
+        // var symbol = parser.symbol(this.AssemblerSymbolTable);
+        // var address = parser.parsedMeaningfulLines;
+        // DebugPrinter.LogState($"DS symbol: {symbol}, address: {address}");
+        // LogAssemblerAction($"add {symbol} type {parser.instructionType(this.AssemblerSymbolTable)} address {address} in symbol table 1");
+        // AssemblerSymbolTable.addEntry(symbol, address);
       }
     }
   }
