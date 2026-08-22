@@ -1,8 +1,6 @@
 namespace HackAssembler;
 
 using System.Text;
-using HackAssembler;
-using Level = HackAssembler.DebugPrinter.LogLevels;
 
 public class Parser
 {
@@ -18,11 +16,11 @@ public class Parser
     var file = new FileInfo(path);
     if (!file.Exists)
     {
-      DebugPrinter.Log($"The file {file.FullName} doesn't exist", Level.INFO);
+      DebugPrinter.LogError($"file {file.FullName} does not exist");
       Environment.Exit(1);
     }
 
-    DebugPrinter.Log($"Parsing {file.FullName}\n", Level.INFO);
+    DebugPrinter.LogAction("parser", $"parse {file.FullName}\n");
     fileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
 
@@ -95,7 +93,7 @@ public class Parser
     {
       nextType = InstructionTypeEnum.C_INSTRUCTION;
     }
-    DebugPrinter.Log($"Changing type from {curInstructionType} to {nextType}", Level.TRACE);
+    DebugPrinter.LogAction("parser", $"change curInstructionType from {curInstructionType} to {nextType}");
     curInstructionType = nextType;
     return nextType;
     // else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
@@ -119,7 +117,7 @@ public class Parser
   public bool hasMoreLines()
   {
     var eof = fileStream.EndOfStream;
-    DebugPrinter.Log($"end of file?  {eof}", Level.TRACE);
+    DebugPrinter.LogState($"end of file? {eof}");
     return eof;
   }
 
@@ -132,15 +130,16 @@ public class Parser
 
   public string symbol()
   {
-    DebugPrinter.Log("Fetching Symbol", Level.TRACE);
+    DebugPrinter.LogAction("parser", "fetch symbol");
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
       return curLine.Substring(1);
     }
     else if (curInstructionType == InstructionTypeEnum.L_INSTRUCTION)
     {
+      DebugPrinter.LogAction("parser", $"L Instruction {curLine} received");
       var returning = curLine.Substring(1, curLine.Length - 2);
-      DebugPrinter.Log($"L Instruction {curLine} received, returning {returning}", Level.DEBUG);
+      DebugPrinter.LogAction("parser", $"returning {returning}");
       return returning;
     }
     return "";
@@ -153,17 +152,17 @@ public class Parser
   {
     if (!hasDest()) 
     {
-      DebugPrinter.Log("no dest, skip", Level.DEBUG);
+      DebugPrinter.LogAction("parser", "no dest, skip");
       return "";
     }
-    DebugPrinter.Log("Fetching Dest", Level.TRACE);
+    DebugPrinter.LogAction("parser", "fetch Dest");
     var lexemes = curLine.ToCharArray();
     string dest = "";
     var builder = new StringBuilder();
-    DebugPrinter.Log($"curLine: {curLine}", Level.DEBUG);
+    DebugPrinter.LogState($"curLine: {curLine}");
     for (var i = 0; i < lexemes.Length; i++)
     {
-      DebugPrinter.Log($"lexeme length: {lexemes.Length}, i: {i}", Level.TRACE);
+      DebugPrinter.LogState($"lexeme length: {lexemes.Length}, i: {i}");
       builder.Append(lexemes[i]);
       if (lexemes.Length > i + 1 && (lexemes[i + 1] == '=' || lexemes[i + 1] == ';')) break;
     }
@@ -174,7 +173,7 @@ public class Parser
 
   public string comp()
   {
-    DebugPrinter.Log("Fetching Comp", Level.TRACE);
+    DebugPrinter.LogAction("parser", "fetch comp");
 
     var lexemes = curLine.ToCharArray();
     string comp = "";
@@ -232,14 +231,14 @@ public class Parser
 
   private string[] getTokens(string line)
   {
-    DebugPrinter.Log(line, Level.DEBUG);
+    DebugPrinter.LogState($"line tokenized: {line}");
     var tokens = line.Split();
     return tokens;
   }
 
   public string jump()
   {
-    DebugPrinter.Log("Fetching Jump", Level.TRACE);
+    DebugPrinter.LogAction("parser", "fetch Jump");
 
     var lexemes = curLine.ToCharArray();
     string jump = "";
@@ -250,21 +249,21 @@ public class Parser
     {
       if (lexemes[i] != ';' && !found) 
       {
-        DebugPrinter.Log("; not found yet, continuing", Level.DEBUG);
+        DebugPrinter.LogAction("parser", "';' not found, continuing");
         continue;
       }
       found = true;
       if (lexemes[i] == ';')
       {
-        DebugPrinter.Log(";, continuing", Level.DEBUG);
+        DebugPrinter.LogAction("parser", "';' fond, continuing");
         continue;
       }
       builder.Append(lexemes[i]);
-      // DebugPrinter.Log($"i + 1 = {lexemes[i+1]}", Level.DEBUG);
-      DebugPrinter.Log($"lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i]}", Level.DEBUG);
+      // DebugPrinter.Log($"i + 1 = {lexemes[i+1]}");
+      DebugPrinter.LogState($"lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i]}");
       if (i + 1 > lexemes.Length) break;
     }
-    DebugPrinter.Log($"(finished loop) lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i-1]}", Level.DEBUG);
+    DebugPrinter.LogState($"(finished loop) lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i-1]}");
     jump = builder.ToString();
     return jump; // WARN: Assume que o camp `dest` foi preenchido corretamente,
   }
@@ -346,7 +345,7 @@ public class Parser
 
     foreach (var instruction in instructions)
     {
-      DebugPrinter.Log($"{instruction}", Level.DEBUG);
+      DebugPrinter.LogState($"instruction: {instruction}");
     }
   }
 

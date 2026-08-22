@@ -1,7 +1,4 @@
-using System.Diagnostics;
 using HackAssembler;
-
-using Level = HackAssembler.DebugPrinter.LogLevels;
 
 public class SymbolTable
 {
@@ -41,10 +38,10 @@ public class SymbolTable
   {
     if (contains(symbol)) 
     {
-      DebugPrinter.Log("Error: symbol already exists",  Level.INFO);
+      DebugPrinter.LogError($"symbol {symbol} already present in symbol table");
       Environment.Exit(1);
     }
-    DebugPrinter.Log($"Adding {symbol} with address {address} in Symbol Table", Level.DEBUG);
+    DebugPrinter.LogAction("symbol table", $"add {symbol} with address {address} to Symbol Table");
 
     symbols.Add(symbol, address);
   }
@@ -64,7 +61,7 @@ public class SymbolTable
   {
     if (!contains(symbol))
     {
-      DebugPrinter.Log("Error: symbol does not exists",  Level.INFO);
+      DebugPrinter.LogError($"symbol {symbol} does not exist");
       Environment.Exit(1);
     }
     return symbols.First(s => s.Key == symbol).Value;

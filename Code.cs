@@ -1,5 +1,4 @@
 using HackAssembler;
-using Level = HackAssembler.DebugPrinter.LogLevels;
 
 public class Code
 {
@@ -15,7 +14,7 @@ public class Code
       // DebugPrinter.PrintValue(binList.Any());
       foreach (var bin in binList)
       {
-        DebugPrinter.Log($"output bin: {bin}", Level.TRACE);
+        DebugPrinter.LogState($"output bin: {bin}");
         sw.WriteLine(bin);
       }
     }
@@ -23,7 +22,7 @@ public class Code
 
   public string dest(string val)
   {
-    DebugPrinter.Log($"received dest {val} as val", Level.DEBUG);
+    LogInput("dest", val);
     switch (val)
     {
       case "M":
@@ -79,7 +78,7 @@ public class Code
   }
   public string jump(string val)
   {
-    DebugPrinter.Log($"received jump {val} as val", Level.DEBUG);
+    LogInput("jump", val);
     switch (val)
     {
       case "JGT":
@@ -99,5 +98,11 @@ public class Code
       default:
         return "000";
     }
+  }
+
+  private void LogInput(string instType, string val)
+  {
+    // instType refers to "dest", "comp" and "jump"...
+    DebugPrinter.LogAction("code", $"receive {instType} {val} as input");
   }
 }

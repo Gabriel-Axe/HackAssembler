@@ -1,9 +1,6 @@
 namespace HackAssembler;
 
 using System.Text;
-using System.Text.Unicode;
-
-using Level = HackAssembler.DebugPrinter.LogLevels;
 
 public class Assembler
 {
@@ -21,7 +18,7 @@ public class Assembler
 
   public void AddToOutputs(string stored)
   {
-    DebugPrinter.Log($"store in Outputs: {stored}", Level.TRACE);
+    DebugPrinter.LogAction("assembler", $"store in Outputs: {stored}");
     Outputs.Add(stored);
   }
 
@@ -33,14 +30,14 @@ public class Assembler
 
     while (!parser.hasMoreLines())
     {
-      DebugPrinter.Log("advancing parser", Level.TRACE);
+      DebugPrinter.LogAction("parser", "advance");
       parser.advance();
       var symbol = parser.symbol();
       var type = parser.instructionType();
       switch (type)
       {
         case Parser.InstructionTypeEnum.A_INSTRUCTION:
-          DebugPrinter.Log($"parse A instruction: @{symbol}", Level.DEBUG);
+          DebugPrinter.LogAction("parser", $"parse A instruction @{symbol}");
           var int_symbol = int.Parse(symbol);
           var bin = Convert.ToString(int_symbol, 2).PadLeft(16, '0').ToString();
           AddToOutputs(bin);
@@ -51,15 +48,15 @@ public class Assembler
           var dest = parser.dest();
           var comp = parser.comp();
           var jump = parser.jump();
-          if (parser.hasDest()) DebugPrinter.Log($"parse C instruction: {dest}={comp};{jump}", Level.DEBUG);
-          else DebugPrinter.Log($"parse C instruction: {comp};{jump}", Level.DEBUG);
+          if (parser.hasDest()) DebugPrinter.LogAction("parser", $"parse C instruction: {dest}={comp};{jump}");
+          else DebugPrinter.LogAction("parser", $"parse C instruction: {comp};{jump}");
           
-          DebugPrinter.Log($"dest: {dest}, comp: {comp}, jump: {jump}", Level.DEBUG);
+          DebugPrinter.LogState($"dest: {dest}, comp: {comp}, jump: {jump}");
 
           var dest_bin = code.dest(dest);
           var comp_bin = code.comp(comp);
           var jump_bin = code.jump(jump);
-          DebugPrinter.Log($"dest bin: {dest_bin}, comp bin: {comp_bin}, jump bin: {jump_bin}", Level.DEBUG);
+          DebugPrinter.LogState($"dest bin: {dest_bin}, comp bin: {comp_bin}, jump bin: {jump_bin}");
 
           var builder = new StringBuilder();
           builder
@@ -77,12 +74,12 @@ public class Assembler
           parser.incrementParsedLines();
           break;
         case Parser.InstructionTypeEnum.L_INSTRUCTION:
-          DebugPrinter.Log($"Adding {symbol} of type {parser.instructionType()} to entries 2", Level.TRACE);
+          DebugPrinter.LogAction("assembler", $"add {symbol} type {parser.instructionType()} to symbol table 2");
           AssemblerSymbolTable.addEntry(symbol);
           break;
       }
     }
-    DebugPrinter.Log($"parsed lines: {parser.parsedLines}", Level.DEBUG);
+    DebugPrinter.LogAction("assembler", $"parsed lines: {parser.parsedLines}");
     code.outputFile(Outputs);
   }
 
@@ -95,7 +92,7 @@ public class Assembler
       if (type == Parser.InstructionTypeEnum.L_INSTRUCTION)
       {
         var symbol = parser.symbol();
-        DebugPrinter.Log("Adding to entries 1", Level.TRACE);
+        DebugPrinter.LogAction("assembler", $"add {symbol} type {parser.instructionType()} to symbol table 1");
         AssemblerSymbolTable.addEntry(symbol);
       }
     }
