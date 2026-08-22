@@ -168,6 +168,7 @@ public class Parser
   public string symbol(SymbolTable symbolTable)
   {
     LogParserAction("fetch symbol");
+    var curInstructionType = instructionType(symbolTable);
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
       return curLine.Substring(1);

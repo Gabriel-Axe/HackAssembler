@@ -6,9 +6,10 @@ static class DebugPrinter
   private enum LogLevels {
     INFO = 3,
     DEBUG = 2,
-    TRACE = 1
+    TRACE = 1,
+    VERBOSE = 0,
   }
-  const LogLevels LOG_LEVEL = LogLevels.DEBUG;
+  const LogLevels LOG_LEVEL = LogLevels.TRACE;
 
   static void LogPattern(string logLevel)
   {
@@ -40,6 +41,7 @@ static class DebugPrinter
       case LogLevels.INFO: { LogPattern("INFO"); break; }
       case LogLevels.DEBUG: { LogPattern("DEBUG"); break; }
       case LogLevels.TRACE: { LogPattern("TRACE"); break; }
+      case LogLevels.VERBOSE: { LogPattern("VERBOSE"); break; }
     }
 
     Console.Write($"{message} \n");
