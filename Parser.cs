@@ -5,10 +5,9 @@ using System.Text;
 public class Parser
 {
   private string Path { get; set; }
-  private StreamReader fileStream { get; set; }
-  private bool ShouldIncrement { get; set; } = true;
-  public int parsedMeaningfulLines { get; private set; } = 0;
-  public string curLine { get; private set; }
+  private StreamReader FileStream { get; set; } 
+  public int ParsedMeaningfulLines { get; private set; } = 0;
+  public string CurLine { get; private set; } = "";
 
   public Parser(string path)
   {
@@ -21,18 +20,14 @@ public class Parser
     }
 
     LogParserAction($"parse {file.FullName}\n");
-    fileStream = new StreamReader(file.FullName, Encoding.UTF8);
+    FileStream = new StreamReader(file.FullName, Encoding.UTF8);
   }
 
-  public void incrementParsedMeaningfulLines() 
+  public void IncrementParsedMeaningfulLines() 
   {
-    // if (ShouldIncrement)
-    // {
-    ShouldIncrement = false;
-    var old = parsedMeaningfulLines;
-    parsedMeaningfulLines++;
-    LogParserAction($"increment parsedLines, old: {old} new: {parsedMeaningfulLines}");
-    // }
+    var old = ParsedMeaningfulLines;
+    ParsedMeaningfulLines++;
+    LogParserAction($"increment parsedLines, old: {old} new: {ParsedMeaningfulLines}");
   }
 
   public enum CTokenType 
@@ -67,19 +62,9 @@ public class Parser
     M,
   }
 
-  private int Line { get; set; } = 0;
-  private int Col { get; set; } = 0;
-
-  /// <summary>
-  /// Reads the specified file and changes the internal Assembler state
-  /// </summary>
-  private void Parse(FileInfo file) {
-    
-  }
-
-  public CTokenType getTokenType(string token)
+  public CTokenType GetTokenType(string token)
   {
-    JumpType[] jumpTypes = {JumpType.JGT, JumpType.JEQ, JumpType.JGE, JumpType.JLT, JumpType.JLE, JumpType.JMP};
+    JumpType[] jumpTypes = [JumpType.JGT, JumpType.JEQ, JumpType.JGE, JumpType.JLT, JumpType.JLE, JumpType.JMP];
     var jumps = new List<string>();
     foreach (var jump in jumpTypes)
     {
@@ -89,23 +74,19 @@ public class Parser
     return CTokenType.DEST;
   }
 
-  public InstructionTypeEnum instructionType(SymbolTable symbolTable) {
+  public InstructionTypeEnum InstructionType() {
 
-    InstructionTypeEnum nextType = InstructionTypeEnum.NO_INSTRUCTION;
+    InstructionTypeEnum nextType;
 
     var isAInstruction = 
-      curLine.StartsWith("@");
-      // && (
-      //     int.TryParse(curLine.Substring(1), out _)
-      //     || symbolTable.contains(curLine.Substring(1)));
+      CurLine.StartsWith("@");
 
     var isLInstruction = 
-      curLine.StartsWith("(") ;
+      CurLine.StartsWith("(") ;
 
     if (isAInstruction) 
     {
       nextType = InstructionTypeEnum.A_INSTRUCTION;
-      this.ShouldIncrement = true;
     }
     else if (isLInstruction) 
     {
@@ -113,13 +94,10 @@ public class Parser
     }
     else 
     {
-      this.ShouldIncrement = true;
       nextType = InstructionTypeEnum.C_INSTRUCTION;
     }
     LogParserAction($"return instruction type {nextType}");
     return nextType;
-    // else if (curLine.Contains("=")) return InstructionTypeEnum.C_INSTRUCTION;
-    // else return InstructionTypeEnum.L_INSTRUCTION;
   }
 
   private void LogParserAction(string what)
@@ -127,56 +105,44 @@ public class Parser
     DebugPrinter.LogAction("parser", what);
   }
 
-  // public void handleAInstrution(string line, SymbolTable symbolTable)
-  // {
-  //   var builder = new StringBuilder();
-  //   for (int i = 0; i > line.Length; i++)
-  //   {
-  //     if (line[i] == '@') continue;
-  //     builder.Append(line[i]);
-  //   }
-  //
-  //   var contents = builder.ToString();
-  //   if (int.TryParse(contents, out _)) return;
-  // }
-
-  public bool hasMoreLines()
+  public bool HasMoreLines()
   {
-    var eof = fileStream.EndOfStream;
+    var eof = FileStream.EndOfStream;
     DebugPrinter.LogState($"end of file? {eof}");
     return eof;
   }
 
   // WARN: I should not send inverted dependencies wtvr its convenient
-  public void advance(SymbolTable symbolTable)
+  public void Advance(SymbolTable symbolTable)
   {
     LogParserAction("advance");
-    curLine = fileStream
+    CurLine = FileStream
         .ReadLine()
         .Trim();
 
-    if (!curLine.Any() || curLine.StartsWith("//")) 
+    if (!CurLine.Any() || CurLine.StartsWith("//")) 
     {
-      advance(symbolTable);
+      Advance(symbolTable);
     }
     else
     {
-      DebugPrinter.LogState($"current line: {curLine}");
+      DebugPrinter.LogState($"current line: {CurLine}");
     }
   }
 
-  public string symbol(SymbolTable symbolTable)
+  public string Symbol()
   {
     LogParserAction("fetch symbol");
-    var curInstructionType = instructionType(symbolTable);
+    var curInstructionType = InstructionType();
     if (curInstructionType == InstructionTypeEnum.A_INSTRUCTION)
     {
-      return curLine.Substring(1);
+      return CurLine[1..^0];
     }
     else if (curInstructionType == InstructionTypeEnum.L_INSTRUCTION)
     {
-      LogParserAction($"L Instruction {curLine} received");
-      var returning = curLine.Substring(1, curLine.Length - 2);
+      LogParserAction($"L Instruction {CurLine} received");
+      var last = CurLine.Length - 2;
+      var returning = CurLine[1..last];
       LogParserAction($"returning {returning}");
       return returning;
     }
@@ -186,38 +152,36 @@ public class Parser
     // }
   }
 
-  public string dest()
+  public string Dest()
   {
-    if (!hasDest()) 
+    if (!HasDest()) 
     {
       LogParserAction("no dest, skip");
       return "";
     }
     LogParserAction("fetch Dest");
-    var lexemes = curLine.ToCharArray();
-    string dest = "";
+    var lexemes = CurLine.ToCharArray();
     var builder = new StringBuilder();
-    DebugPrinter.LogState($"curLine: {curLine}");
+    DebugPrinter.LogState($"curLine: {CurLine}");
     for (var i = 0; i < lexemes.Length; i++)
     {
       DebugPrinter.LogState($"lexeme length: {lexemes.Length}, i: {i}");
       builder.Append(lexemes[i]);
       if (lexemes.Length > i + 1 && (lexemes[i + 1] == '=' || lexemes[i + 1] == ';')) break;
     }
-    dest = builder.ToString();
+    var dest = builder.ToString();
     return dest; // WARN: Assume que o camp `dest` foi preenchido corretamente,
                       // e que eh de tamanho 1 o simbolo
   }
 
-  public string comp()
+  public string Comp()
   {
     LogParserAction("fetch comp");
 
-    var lexemes = curLine.ToCharArray();
-    string comp = "";
+    var lexemes = CurLine.ToCharArray();
     var builder = new StringBuilder();
     var found = false;
-    if (hasDest())
+    if (HasDest())
     {
       for (var i = 0; i < lexemes.Length; i++)
       {
@@ -236,30 +200,14 @@ public class Parser
         if (i + 1 < lexemes.Length && lexemes[i + 1] == ';') break;
       }
     }
-    comp = builder.ToString();
+    var comp = builder.ToString();
     return comp; // WARN: Assume que o camp `dest` foi preenchido corretamente,
                       // e que eh de tamanho 1 o simbolo
-
-    // var tokens = getTokens(curLine);
-    // var builder = new StringBuilder();
-    // for (int i = 0; i < tokens.Length; i++)
-    // {
-    //   DebugPrinter.Log($"Seeing if tokens[i] equals ;");
-    //   var reachedJump = tokens[i].Equals(";");
-    //   if (reachedJump) break;
-    //   DebugPrinter.Log($"tokens[i] does not equals ;");
-    //   DebugPrinter.Log($"Appending tokens[i] ({tokens[i]})");
-    //   builder.Append(tokens[i]);
-    // }
-    // var returning = builder.ToString();
-    // DebugPrinter.Log($"Returning returining ({returning}");
-    // return returning; // WARN: Assume que o camp `dest` foi preenchido corretamente,
-    //                   // e que eh de tamanho 1 o simbolo
   }
 
-  public bool hasDest() 
+  public bool HasDest() 
   {
-    var line = curLine;
+    var line = CurLine;
     for (int i = 0; i < line.Length; i++)
     {
       if (line[i] == '=') return true;
@@ -267,23 +215,15 @@ public class Parser
     return false;
   }
 
-  private string[] getTokens(string line)
-  {
-    DebugPrinter.LogState($"line tokenized: {line}");
-    var tokens = line.Split();
-    return tokens;
-  }
-
-  public string jump()
+  public string Jump()
   {
     LogParserAction("fetch Jump");
 
-    var lexemes = curLine.ToCharArray();
-    string jump = "";
+    var lexemes = CurLine.ToCharArray();
     var builder = new StringBuilder();
     var found = false;
     int i = 0;
-    for (i = 0; i < lexemes.Length; i++)
+    for (; i < lexemes.Length; i++)
     {
       if (lexemes[i] != ';' && !found) 
       {
@@ -297,105 +237,17 @@ public class Parser
         continue;
       }
       builder.Append(lexemes[i]);
-      // DebugPrinter.Log($"i + 1 = {lexemes[i+1]}");
-      DebugPrinter.LogState($"lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i]}");
+      DebugPrinter.LogState($"lexemes: {CurLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i]}");
       if (i + 1 > lexemes.Length) break;
     }
-    DebugPrinter.LogState($"(finished loop) lexemes: {curLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i-1]}");
-    jump = builder.ToString();
+    DebugPrinter.LogState($"(finished loop) lexemes: {CurLine} length: {lexemes.Length} i: {i} lexemes[i]: {lexemes[i-1]}");
+    var jump = builder.ToString();
     return jump; // WARN: Assume que o camp `dest` foi preenchido corretamente,
-  }
-
-  void ReadCInstruction(string line)
-  {
-    int c_initial = 0b1110_0000_0000_0000;
-    var token_builder = new StringBuilder();
-
-    char[] chars = line.ToCharArray();
-    var stopping_lexemes = new List<char>{'=', ';'};
-    for (int i = 0; i < chars.Length; i++)
-    {
-      var lexeme = chars[i];
-      if (!stopping_lexemes.Contains(lexeme))
-      {
-        token_builder.Append(lexeme);
-      }
-      else
-      {
-        switch (lexeme) {
-          case '=':
-            var next_lexeme = chars[i+1];
-            break;
-          case ';':
-            break;
-        }
-      }
-    }
-    string dest = line[0].ToString();
-
-    int b_dest = 0b0;
-
-    switch (dest) {
-      case "D":
-        b_dest = 0b010;
-        break;
-
-      case "A":
-        b_dest = 0b100;
-        break;
-
-      case "M":
-        b_dest = 0b001;
-        break;
-    }
-
-    var final = c_initial | b_dest;
-    Console.WriteLine(Convert.ToString(final, 2).PadLeft(16, '0'));
-
-    // int b_comp;
-    // switch (comp) {
-    //   case "D":
-    //     b_dest = 0b010;
-    //     break;
-    //
-    //   case "A":
-    //     b_dest = 0b100;
-    //     break;
-    //
-    //   case "M":
-    //     b_dest = 0b001;
-    //     break;
-    // }
-  }
-
-
-  private void ReadCompiledFile(string path) 
-  {
-    List<short> instructions = new List<short>();
-
-    using (BinaryReader reader = new BinaryReader(File.OpenRead(path)))
-    {
-      while (reader.BaseStream.Position < reader.BaseStream.Length)
-      {
-        instructions.Add(reader.ReadInt16());
-      }
-    }
-
-    foreach (var instruction in instructions)
-    {
-      DebugPrinter.LogState($"instruction: {instruction}");
-    }
   }
 
   public Parser Clone()
   {
     LogParserAction("clone parser");
-    return new Parser(this.Path);
+    return new Parser(Path);
   }
-}
-
-public class CInstruction(string dest, string comp, string? jump) {
-  public string dest { get; init; }
-  public string comp { get; init; }
-  public string? jump { get; init; }
 }

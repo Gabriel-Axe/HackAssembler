@@ -3,11 +3,11 @@ using HackAssembler;
 public class SymbolTable
 {
 
-  public int currentCount { get; private set; } = 0;
+  public int CurrentCount { get; private set; } = 0;
 
   public SymbolTable() {}
 
-  private Dictionary<string, int> symbols { get; set; } = new Dictionary<string, int>()
+  private Dictionary<string, int> Symbols { get; set; } = new Dictionary<string, int>()
   {
     { "R0", 0 }, 
     { "R1", 1 }, 
@@ -36,43 +36,42 @@ public class SymbolTable
 
   public void OutputContents()
   {
-    foreach (var (symbol, address) in this.symbols)
+    foreach (var (symbol, address) in Symbols)
     {
       DebugPrinter.LogState($"symbol {symbol}: {address}");
     }
   }
 
-  public void addEntry(string symbol, int address)
+  public void AddEntry(string symbol, int address)
   {
-    if (contains(symbol)) 
+    if (Contains(symbol)) 
     {
       DebugPrinter.LogError($"symbol {symbol} already present in symbol table");
       Environment.Exit(1);
     }
     DebugPrinter.LogAction("symbol table", $"add {symbol} with address {address} to Symbol Table");
-    symbols.Add(symbol, address);
+    Symbols.Add(symbol, address);
     OutputContents();
   }
 
-  public void addEntry(string symbol, Parser parser)
+  public void AddEntry(string symbol, Parser parser)
   {
-    // addEntry(symbol, parser.parsedMeaningfulLines + 6);
-    addEntry(symbol, parser.parsedMeaningfulLines);
-    currentCount++;
+    AddEntry(symbol, parser.ParsedMeaningfulLines);
+    CurrentCount++;
   }
 
-  public bool contains(string symbol)
+  public bool Contains(string symbol)
   {
-    return symbols.Any(s => s.Key == symbol);
+    return Symbols.Any(s => s.Key == symbol);
   }
 
-  public int getAddress(string symbol)
+  public int GetAddress(string symbol)
   {
-    if (!contains(symbol))
+    if (!Contains(symbol))
     {
       DebugPrinter.LogError($"symbol {symbol} does not exist");
       Environment.Exit(1);
     }
-    return symbols.First(s => s.Key == symbol).Value;
+    return Symbols.First(s => s.Key == symbol).Value;
   }
 }

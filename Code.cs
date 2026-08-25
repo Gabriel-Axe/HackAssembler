@@ -2,49 +2,33 @@ using HackAssembler;
 
 public class Code
 {
-  private Int16 CurAddress { get; set; } = 0;
-  private Int16 CurOutput { get; set; } = 0;
-  private List<Int16> Outputs  { get; set; } = new();
-  private bool InMemory {get; set;} = false;
-
-  public void outputFile(List<string> binList)
+  public void OutputFile(List<string> binList)
   {
-    using (StreamWriter sw = File.CreateText("./Output.hack"))
+    using StreamWriter sw = File.CreateText("./Output.hack");
+    foreach (var bin in binList)
     {
-      // DebugPrinter.PrintValue(binList.Any());
-      foreach (var bin in binList)
-      {
-        DebugPrinter.LogState($"output bin: {bin}");
-        sw.WriteLine(bin);
-      }
+      DebugPrinter.LogState($"output bin: {bin}");
+      sw.WriteLine(bin);
     }
   }
 
-  public string dest(string val)
+  public string Dest(string val)
   {
     LogInput("dest", val);
-    switch (val)
+    return val switch
     {
-      case "M":
-        return "001";
-      case "AM":
-        return "101";
-      case "D":
-        return "010";
-      case "DM":
-      case "MD":
-        return "011";
-      case "AD":
-        return "110";
-      case "A":
-        return "100";
-      case "ADM":
-        return "111";
-      default:
-        return "000";
-    }
+      "M" => "001",
+      "AM" => "101",
+      "D" => "010",
+      "DM" =>"011",
+      "MD" => "011",
+      "AD" => "110",
+      "A" => "100",
+      "ADM" => "111",
+      _ => "000"
+    };
   }
-  public string comp(string val)
+  public string Comp(string val)
   {
     if (val == "0") return "0101010";
     if (val == "1") return "0111111";
@@ -76,28 +60,21 @@ public class Code
     if (val == "D|M") return "1010101";
     return "000000";
   }
-  public string jump(string val)
+
+  public string Jump(string val)
   {
     LogInput("jump", val);
-    switch (val)
+    return val switch
     {
-      case "JGT":
-        return "001";
-      case "JEQ":
-        return "010";
-      case "JGE":
-        return "011";
-      case "JLT":
-        return "100";
-      case "JNE":
-        return "101";
-      case "JLE":
-        return "110";
-      case "JMP":
-        return "111";
-      default:
-        return "000";
-    }
+      "JGT" => "001",
+      "JEQ" => "010",
+      "JGE" => "011",
+      "JLT" => "100",
+      "JNE" => "101",
+      "JLE" => "110",
+      "JMP" => "111",
+      _ => "000",
+    };
   }
 
   private void LogInput(string instType, string val)
